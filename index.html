@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ออกเลขหนังสือ CPC-PSW</title>
+<title>ระบบคุมเลขหนังสือ CPC-PSW</title>
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +54,14 @@
   .hidden{display:none!important}
   .empty{color:var(--muted);text-align:center;padding:24px}
   @media (max-width:600px){ .hide-sm{display:none} }
+  .tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+  .tab{background:none;color:var(--muted);border-radius:10px 10px 0 0;padding:10px 18px;border:1px solid transparent;border-bottom:none;margin-bottom:-2px}
+  .tab.on{background:var(--card);color:var(--brand);border-color:var(--line);border-bottom:2px solid var(--card)}
+  .tab .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .opt{font-weight:400;color:var(--muted)}
+  td a{color:var(--brand-2)}
+  .sub{display:block;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -61,14 +69,13 @@
   <div class="wrap">
     <img class="mark" src="logo.jpg" alt="ตราชมรม CPC-PSW">
     <div>
-      <h1>ระบบคุมออกเลขหนังสือ</h1>
+      <h1>ระบบคุมเลขหนังสือ</h1>
       <p>ชมรมนักสังคมสงเคราะห์และนักจิตวิทยา ป.วิ.อาญา</p>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <!-- Login -->
   <section id="login" class="card">
     <img class="login-logo" src="logo.jpg" alt="ตราชมรม CPC-PSW">
     <h2 style="text-align:center">เข้าสู่ระบบ</h2>
@@ -78,74 +85,122 @@
     <div class="msg" id="loginMsg"></div>
   </section>
 
-  <!-- App -->
-  <section id="app" class="grid hidden">
-    <div class="card">
-      <h2>ขอเลขหนังสือใหม่</h2>
-      <form id="form">
-        <label for="subject">เรื่อง *</label>
-        <textarea id="subject" required></textarea>
-        <label for="to">เรียน *</label>
-        <input id="to" required list="toList">
-        <datalist id="toList"></datalist>
-        <label for="date">วันที่หนังสือออก</label>
-        <input id="date" type="date" required>
-        <label for="by">ผู้ขอเลข</label>
-        <input id="by" placeholder="ชื่อผู้ขอ (ไม่บังคับ)">
-        <div class="preview">เลขที่จะได้รับโดยประมาณ: <b id="pv">—</b></div>
-        <button class="primary" id="btnIssue" type="submit">ออกเลขหนังสือ</button>
-        <div class="msg" id="msg"></div>
-      </form>
-      <div class="result" id="result">
-        <div>ได้เลขหนังสือ</div>
-        <div class="no" id="resNo"></div>
-        <div id="resInfo" style="font-size:14px;color:var(--muted)"></div>
-        <button class="ghost" id="btnCopy" style="margin-top:8px">คัดลอกเลข</button>
+  <section id="app" class="hidden">
+    <nav class="tabs" role="tablist">
+      <button class="tab on" data-tab="out" role="tab"><span class="dot" style="background:#1f2f6e"></span>หนังสือออก</button>
+      <button class="tab" data-tab="in" role="tab"><span class="dot" style="background:#3f9a96"></span>หนังสือรับ</button>
+    </nav>
+
+    <!-- ===== หนังสือออก ===== -->
+    <div class="grid" id="pane-out">
+      <div class="card">
+        <h2>ขอเลขหนังสือออก</h2>
+        <form id="formOut">
+          <label for="oSubject">เรื่อง *</label>
+          <textarea id="oSubject"></textarea>
+          <label for="oTo">เรียน *</label>
+          <input id="oTo" list="toList">
+          <label for="oDate">วันที่หนังสือออก</label>
+          <input id="oDate" type="date">
+          <label for="oBy">ผู้ขอเลข <span class="opt">(ไม่บังคับ)</span></label>
+          <input id="oBy" class="byName">
+          <div class="preview">เลขที่จะได้รับโดยประมาณ: <b id="oPv">—</b></div>
+          <button class="primary" type="submit">ออกเลขหนังสือ</button>
+          <div class="msg" id="oMsg"></div>
+        </form>
+        <div class="result" id="oResult">
+          <div>ได้เลขหนังสือ</div>
+          <div class="no" id="oResNo"></div>
+          <div id="oResInfo" style="font-size:14px;color:var(--muted)"></div>
+          <button class="ghost copyRes" data-src="oResNo" style="margin-top:8px">คัดลอกเลข</button>
+        </div>
+        <div class="rule"><b>รูปแบบเลข:</b> CPC-PSW + ปี พ.ศ. 2 หลัก + เดือน 2 หลัก + ลำดับในเดือน 2 หลัก<br>เช่น 2 ต.ค. 2569 ฉบับแรก = CPC-PSW691001</div>
       </div>
-      <div class="rule">
-        <b>รูปแบบเลข:</b> CPC-PSW + ปี พ.ศ. 2 หลัก + เดือน 2 หลัก + ลำดับในเดือน 2 หลัก<br>
-        เช่น 2 ต.ค. 2569 ฉบับแรก = CPC-PSW691001
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="margin:0;flex:1">ทะเบียนหนังสือออก</h2>
+          <input id="oQ" placeholder="ค้นหา เรื่อง / เรียน / เลข">
+          <button class="ghost reload">รีเฟรช</button>
+        </div>
+        <div class="tbl"><table>
+          <thead><tr><th>เลขหนังสือ</th><th>เรื่อง</th><th class="hide-sm">เรียน</th><th>วันที่</th></tr></thead>
+          <tbody id="oRows"><tr><td colspan="4" class="empty">กำลังโหลด…</td></tr></tbody>
+        </table></div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="toolbar">
-        <h2 style="margin:0;flex:1">ทะเบียนหนังสือออก</h2>
-        <input id="q" placeholder="ค้นหา เรื่อง / เรียน / เลข">
-        <button class="ghost" id="btnReload">รีเฟรช</button>
+    <!-- ===== หนังสือรับ ===== -->
+    <div class="grid hidden" id="pane-in">
+      <div class="card">
+        <h2>ลงทะเบียนหนังสือรับ</h2>
+        <form id="formIn">
+          <label for="iFrom">จาก (หน่วยงานผู้ส่ง) *</label>
+          <input id="iFrom" list="fromList">
+          <label for="iSubject">เรื่อง *</label>
+          <textarea id="iSubject"></textarea>
+          <div class="row2">
+            <div><label for="iRefNo">เลขที่หนังสือ</label><input id="iRefNo" placeholder="เช่น อส 0029/123"></div>
+            <div><label for="iRefDate">ลงวันที่</label><input id="iRefDate" type="date"></div>
+          </div>
+          <label for="iTo">เรียน</label>
+          <input id="iTo" placeholder="เช่น ประธานชมรม">
+          <label for="iDate">วันที่รับ</label>
+          <input id="iDate" type="date">
+          <label for="iNote">การดำเนินการ / มอบหมาย <span class="opt">(ไม่บังคับ)</span></label>
+          <input id="iNote">
+          <label for="iLink">ลิงก์ไฟล์หนังสือ <span class="opt">(ไม่บังคับ เช่น ลิงก์ Google Drive)</span></label>
+          <input id="iLink" type="url" placeholder="https://">
+          <label for="iBy">ผู้ลงรับ <span class="opt">(ไม่บังคับ)</span></label>
+          <input id="iBy" class="byName">
+          <div class="preview">เลขรับโดยประมาณ: <b id="iPv">—</b></div>
+          <button class="primary" type="submit" style="background:#2c7a77">ลงรับหนังสือ</button>
+          <div class="msg" id="iMsg"></div>
+        </form>
+        <div class="result" id="iResult">
+          <div>ได้เลขรับ</div>
+          <div class="no" id="iResNo"></div>
+          <div id="iResInfo" style="font-size:14px;color:var(--muted)"></div>
+          <button class="ghost copyRes" data-src="iResNo" style="margin-top:8px">คัดลอกเลข</button>
+        </div>
+        <div class="rule"><b>รูปแบบเลขรับ:</b> R- + ปี พ.ศ. 2 หลัก + เดือน 2 หลัก + ลำดับในเดือน 2 หลัก<br>เช่น รับวันที่ 2 ต.ค. 2569 ฉบับแรก = R-691001</div>
       </div>
-      <div class="tbl">
-        <table>
-          <thead><tr><th>เลขหนังสือ</th><th>เรื่อง</th><th class="hide-sm">เรียน</th><th>วันที่</th></tr></thead>
-          <tbody id="rows"><tr><td colspan="4" class="empty">กำลังโหลด…</td></tr></tbody>
-        </table>
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="margin:0;flex:1">ทะเบียนหนังสือรับ</h2>
+          <input id="iQ" placeholder="ค้นหา เรื่อง / จาก / เลข">
+          <button class="ghost reload">รีเฟรช</button>
+        </div>
+        <div class="tbl"><table>
+          <thead><tr><th>เลขรับ</th><th>เรื่อง</th><th class="hide-sm">จาก</th><th>วันที่รับ</th></tr></thead>
+          <tbody id="iRows"><tr><td colspan="4" class="empty">กำลังโหลด…</td></tr></tbody>
+        </table></div>
       </div>
     </div>
   </section>
 </main>
 
+<datalist id="toList"></datalist>
+<datalist id="fromList"></datalist>
+
 <script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-let PASS = '';
-let RECORDS = [];
+let PASS = '', TAB = 'out';
+const DATA = { out: [], in: [], loaded: {} };
 try { PASS = sessionStorage.getItem('cpcpass') || ''; } catch(e){}
-try { $('#by').value = localStorage.getItem('cpcby') || ''; } catch(e){}
+try { const b = localStorage.getItem('cpcby') || ''; document.querySelectorAll('.byName').forEach(i => i.value = b); } catch(e){}
 
 async function api(action, data = {}) {
   if (!window.API_URL || API_URL.includes('PASTE')) throw new Error('ยังไม่ได้ตั้งค่า API_URL ใน config.js');
-  // text/plain เพื่อเลี่ยง CORS preflight ของ Apps Script
   const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({ action, passcode: PASS, ...data }) });
   const j = await res.json();
   if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
   return j;
 }
-
-function today() {
-  const d = new Date(Date.now() + 7*3600e3); // เวลาไทย
-  return d.toISOString().slice(0,10);
-}
+const today = () => new Date(Date.now() + 7*3600e3).toISOString().slice(0,10);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const P = t => t === 'out' ? 'o' : 'i';
 
 async function login(p) {
   PASS = p; $('#loginMsg').textContent = 'กำลังตรวจสอบ…';
@@ -153,66 +208,103 @@ async function login(p) {
     await api('login');
     try { sessionStorage.setItem('cpcpass', p); } catch(e){}
     $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-    $('#date').value = today(); preview(); load();
+    $('#oDate').value = today(); $('#iDate').value = today();
+    let t = 'out'; try { t = localStorage.getItem('cpctab') || 'out'; } catch(e){}
+    switchTab(t);
   } catch (e) {
-    $('#loginMsg').textContent = e.message; PASS='';
+    $('#loginMsg').textContent = e.message; PASS = '';
     try { sessionStorage.removeItem('cpcpass'); } catch(_){}
   }
 }
 
-async function preview() {
-  $('#pv').textContent = '…';
-  try { $('#pv').textContent = (await api('preview', { date: $('#date').value })).docNo; }
-  catch(e){ $('#pv').textContent = '—'; }
+function switchTab(t) {
+  TAB = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('#pane-out').classList.toggle('hidden', t !== 'out');
+  $('#pane-in').classList.toggle('hidden', t !== 'in');
+  try { localStorage.setItem('cpctab', t); } catch(e){}
+  if (!DATA.loaded[t]) { load(t); preview(t); }
 }
 
-async function load() {
+async function preview(t) {
+  const el = $('#' + P(t) + 'Pv'); el.textContent = '…';
+  try { el.textContent = (await api('preview', { type: t, date: $('#' + P(t) + 'Date').value })).docNo; }
+  catch(e){ el.textContent = '—'; }
+}
+
+async function load(t) {
   try {
-    RECORDS = (await api('list', { limit: 500 })).data;
-    render();
-    const tos = [...new Set(RECORDS.map(r => r.to).filter(Boolean))];
-    $('#toList').innerHTML = tos.map(t => `<option value="${esc(t)}">`).join('');
-  } catch(e) { $('#rows').innerHTML = `<tr><td colspan="4" class="empty">${esc(e.message)}</td></tr>`; }
+    DATA[t] = (await api('list', { type: t, limit: 500 })).data; DATA.loaded[t] = true;
+    render(t);
+    const key = t === 'out' ? 'to' : 'from';
+    const uniq = [...new Set(DATA[t].map(r => r[key]).filter(Boolean))];
+    $(t === 'out' ? '#toList' : '#fromList').innerHTML = uniq.map(x => `<option value="${esc(x)}">`).join('');
+  } catch(e) { $('#' + P(t) + 'Rows').innerHTML = `<tr><td colspan="4" class="empty">${esc(e.message)}</td></tr>`; }
 }
 
-function render() {
-  const q = $('#q').value.trim().toLowerCase();
-  const list = RECORDS.filter(r => !q || [r.subject,r.to,r.docNo,r.date].join(' ').toLowerCase().includes(q));
-  $('#rows').innerHTML = list.length ? list.map(r => `<tr>
-    <td class="no">${esc(r.docNo)}<button class="copy" data-c="${esc(r.docNo)}">คัดลอก</button></td>
-    <td>${esc(r.subject)}</td><td class="hide-sm">${esc(r.to)}</td><td style="white-space:nowrap">${esc(r.date)}</td>
-  </tr>`).join('') : '<tr><td colspan="4" class="empty">ไม่พบรายการ</td></tr>';
+function render(t) {
+  const q = $('#' + P(t) + 'Q').value.trim().toLowerCase();
+  const list = DATA[t].filter(r => !q || Object.values(r).join(' ').toLowerCase().includes(q));
+  const html = list.map(r => t === 'out'
+    ? `<tr><td class="no">${esc(r.docNo)}<button class="copy" data-c="${esc(r.docNo)}">คัดลอก</button></td>
+       <td>${esc(r.subject)}</td><td class="hide-sm">${esc(r.to)}</td><td style="white-space:nowrap">${esc(r.date)}</td></tr>`
+    : `<tr><td class="no">${esc(r.docNo)}<button class="copy" data-c="${esc(r.docNo)}">คัดลอก</button></td>
+       <td>${esc(r.subject)}${r.refNo ? `<span class="sub">ที่ ${esc(r.refNo)}${r.refDate ? ' ลว. ' + esc(r.refDate) : ''}</span>` : ''}
+       ${r.note ? `<span class="sub">→ ${esc(r.note)}</span>` : ''}
+       ${/^https?:\/\//.test(r.link) ? `<span class="sub"><a href="${esc(r.link)}" target="_blank" rel="noopener">เปิดไฟล์</a></span>` : ''}</td>
+       <td class="hide-sm">${esc(r.from)}</td><td style="white-space:nowrap">${esc(r.date)}</td></tr>`).join('');
+  $('#' + P(t) + 'Rows').innerHTML = html || '<tr><td colspan="4" class="empty">ไม่พบรายการ</td></tr>';
 }
 
-function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function copy(t, btn){ navigator.clipboard?.writeText(t).then(()=>{ const o=btn.textContent; btn.textContent='คัดลอกแล้ว'; setTimeout(()=>btn.textContent=o,1200); }); }
+function copy(text, btn){ navigator.clipboard?.writeText(text).then(()=>{ const o=btn.textContent; btn.textContent='คัดลอกแล้ว'; setTimeout(()=>btn.textContent=o,1200); }); }
+function saveBy(v){ try { localStorage.setItem('cpcby', v); } catch(_){} document.querySelectorAll('.byName').forEach(i => i.value = v); }
+
+async function submit(t, action, payload, confirmText, form) {
+  const p = P(t), btn = form.querySelector('button[type=submit]'), label = btn.textContent;
+  if (!confirm(confirmText)) return;
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…'; $('#' + p + 'Msg').textContent = '';
+  try {
+    saveBy(payload.by);
+    const r = await api(action, payload);
+    $('#' + p + 'ResNo').textContent = r.docNo;
+    $('#' + p + 'ResInfo').textContent = `วันที่ ${r.date} • บันทึกในแถวที่ ${r.row} ของชีต`;
+    $('#' + p + 'Result').style.display = 'block';
+    return true;
+  } catch(err) { $('#' + p + 'Msg').textContent = err.message; }
+  finally { btn.disabled = false; btn.textContent = label; }
+}
+
+$('#formOut').onsubmit = async e => {
+  e.preventDefault();
+  const subject = $('#oSubject').value.trim(), to = $('#oTo').value.trim();
+  if (!subject || !to) { $('#oMsg').textContent = 'กรุณากรอก เรื่อง และ เรียน'; return; }
+  const ok = await submit('out', 'issue', { subject, to, date: $('#oDate').value, by: $('#oBy').value.trim() },
+    `ยืนยันออกเลขหนังสือ\n\nเรื่อง: ${subject}\nเรียน: ${to}`, e.target);
+  if (ok) { $('#oSubject').value = ''; $('#oTo').value = ''; load('out'); preview('out'); }
+};
+
+$('#formIn').onsubmit = async e => {
+  e.preventDefault();
+  const v = id => $('#' + id).value.trim();
+  if (!v('iFrom') || !v('iSubject')) { $('#iMsg').textContent = 'กรุณากรอก จาก และ เรื่อง'; return; }
+  const ok = await submit('in', 'receive', { type: 'in', from: v('iFrom'), subject: v('iSubject'), refNo: v('iRefNo'),
+    refDate: v('iRefDate'), to: v('iTo'), date: v('iDate'), note: v('iNote'), link: v('iLink'), by: v('iBy') },
+    `ยืนยันลงรับหนังสือ\n\nจาก: ${v('iFrom')}\nเรื่อง: ${v('iSubject')}`, e.target);
+  if (ok) { ['iFrom','iSubject','iRefNo','iRefDate','iTo','iNote','iLink'].forEach(id => $('#' + id).value = ''); load('in'); preview('in'); }
+};
 
 $('#btnLogin').onclick = () => login($('#pass').value);
 $('#pass').onkeydown = e => { if (e.key === 'Enter') login($('#pass').value); };
-$('#date').onchange = preview;
-$('#q').oninput = render;
-$('#btnReload').onclick = () => { load(); preview(); };
-$('#rows').onclick = e => { const b = e.target.closest('.copy'); if (b) copy(b.dataset.c, b); };
-$('#btnCopy').onclick = e => copy($('#resNo').textContent, e.target);
-
-$('#form').onsubmit = async e => {
-  e.preventDefault();
-  const subject = $('#subject').value.trim(), to = $('#to').value.trim();
-  if (!subject || !to) { $('#msg').textContent = 'กรุณากรอก เรื่อง และ เรียน'; return; }
-  if (!confirm(`ยืนยันออกเลขหนังสือ\n\nเรื่อง: ${subject}\nเรียน: ${to}`)) return;
-  const btn = $('#btnIssue'); btn.disabled = true; btn.textContent = 'กำลังออกเลข…'; $('#msg').textContent = '';
-  try {
-    const by = $('#by').value.trim();
-    try { localStorage.setItem('cpcby', by); } catch(_){}
-    const r = await api('issue', { subject, to, date: $('#date').value, by });
-    $('#resNo').textContent = r.docNo;
-    $('#resInfo').textContent = `ลงวันที่ ${r.date} • บันทึกในแถวที่ ${r.row} ของชีต`;
-    $('#result').style.display = 'block';
-    $('#subject').value = ''; $('#to').value = '';
-    load(); preview();
-  } catch(err) { $('#msg').textContent = err.message; }
-  finally { btn.disabled = false; btn.textContent = 'ออกเลขหนังสือ'; }
-};
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+$('#oDate').onchange = () => preview('out');
+$('#iDate').onchange = () => preview('in');
+$('#oQ').oninput = () => render('out');
+$('#iQ').oninput = () => render('in');
+document.querySelectorAll('.reload').forEach(b => b.onclick = () => { load(TAB); preview(TAB); });
+document.addEventListener('click', e => {
+  const c = e.target.closest('.copy'); if (c) copy(c.dataset.c, c);
+  const r = e.target.closest('.copyRes'); if (r) copy($('#' + r.dataset.src).textContent, r);
+});
 
 if (PASS) login(PASS);
 </script>
